@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Řemeslník na dosah</title>
+  <meta name="description" content="Popište problém v domácnosti a my vám ukážeme nejbližší vhodné řemeslníky na mapě. Ukázkový školní prototyp, data jsou smyšlená.">
+  <meta name="theme-color" content="#031927">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23BA1200'/%3E%3Cpath d='M17.5 8.5a5 5 0 0 0-6.7 6.3L6 19.6 8.4 22l4.8-4.8a5 5 0 0 0 6.3-6.7l-3.2 3.2-2.2-.6-.6-2.2z' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Přeskočit na obsah</a>
+
+  <!-- Upozornění na ukázkový charakter webu (nahoře) -->
+  <div class="demo-banner" role="note">
+    <span class="demo-pill">DEMO</span>
+    <strong>Ukázkový prototyp, data jsou smyšlená.</strong>
+  </div>
+
+  <header class="site-header">
+    <a class="logo" href="./" aria-label="Řemeslník na dosah – úvodní stránka">
+      <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <rect width="32" height="32" rx="9" fill="#BA1200"/>
+        <path d="M17.5 8.5a5 5 0 0 0-6.7 6.3L6 19.6 8.4 22l4.8-4.8a5 5 0 0 0 6.3-6.7l-3.2 3.2-2.2-.6-.6-2.2z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+        <circle cx="23.5" cy="23.5" r="3" fill="#9DD1F1"/>
+      </svg>
+      <span>Řemeslník <b>na dosah</b></span>
+    </a>
+  </header>
+
+  <main id="main" tabindex="-1">
+
+    <!-- ==================== OBRAZOVKA 1: FORMULÁŘ ==================== -->
+    <section id="screen-form" class="screen-form" aria-labelledby="form-title">
+      <div class="blob blob-a" aria-hidden="true"></div>
+      <div class="blob blob-b" aria-hidden="true"></div>
+
+      <div class="hero">
+        <p class="eyebrow">Rakovnicko · Tuchlovice · Kladensko</p>
+        <h1 id="form-title">Něco doma nefunguje?<br><span>Řemeslník je blíž, než myslíte.</span></h1>
+        <p class="lead">Popište problém a ukážeme vám nejbližší vhodné řemeslníky na mapě i v seznamu.</p>
+      </div>
+
+      <form id="search-form" class="form-card" novalidate autocomplete="off">
+
+        <!-- 1) Kategorie -->
+        <fieldset class="field-group">
+          <legend><span class="step">1</span> Vyberte typ problému <small>(nepovinné – když nevyberete, určíme ho z popisu)</small></legend>
+          <div class="tiles" id="category-tiles"></div>
+          <button type="button" class="link-btn" id="clear-category" hidden>Zrušit výběr kategorie</button>
+        </fieldset>
+
+        <!-- 2) Adresa -->
+        <div class="field-group">
+          <label for="address" class="field-label"><span class="step">2</span> Adresa <small>(obec a ulice)</small></label>
+          <input id="address" name="address" type="text" inputmode="text" autocomplete="street-address"
+                 placeholder="např. Rakovník, Husovo náměstí 20" aria-describedby="address-help address-error" required>
+          <p id="address-help" class="help">Adresu použijeme jen k nalezení řemeslníků ve vašem okolí. Hledáme v Česku.</p>
+          <p id="address-error" class="error" role="alert" hidden></p>
+
+          <!-- Nouzový výběr obce, pokud se adresu nepodaří najít -->
+          <div id="town-fallback" class="notice" role="alert" hidden>
+            <p id="town-fallback-msg"><strong>Adresu se nepodařilo najít.</strong> Vyberte nejbližší obec a hledání s ní dokončíme.</p>
+            <div class="town-row">
+              <label for="town-select" class="sr-only">Obec</label>
+              <select id="town-select"></select>
+              <button type="button" class="btn btn-secondary" id="town-continue">Pokračovat s vybranou obcí</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3) Popis -->
+        <div class="field-group">
+          <label for="problem" class="field-label"><span class="step">3</span> Popište svůj problém</label>
+          <textarea id="problem" name="problem" rows="3" placeholder="např. kape mi kohoutek u umyvadla" aria-describedby="problem-hint problem-error"></textarea>
+          <p id="problem-hint" class="help" aria-live="polite"></p>
+          <p id="problem-error" class="error" role="alert" hidden></p>
+
+          <div class="examples" role="group" aria-label="Příklady popisu problému – klikněte pro vložení">
+            <span class="examples-label">Příklady:</span>
+            <button type="button" class="chip" data-example="kape mi kohoutek u umyvadla">kape mi kohoutek</button>
+            <button type="button" class="chip" data-example="nejde světlo a vyhodilo jistič">nejde světlo, vyhodilo jistič</button>
+            <button type="button" class="chip" data-example="radiátor v obýváku je studený">studený radiátor</button>
+            <button type="button" class="chip" data-example="zabouchl jsem si dveře a nemám klíč">zabouchnuté dveře</button>
+            <button type="button" class="chip" data-example="cítím plyn">cítím plyn</button>
+          </div>
+        </div>
+
+        <!-- Upozornění na zápach plynu -->
+        <div id="gas-alert-form" class="gas-alert" role="alert" hidden></div>
+
+        <button type="submit" class="btn btn-primary btn-xl" id="submit-btn">
+          <span class="btn-label">Najít řemeslníky</span>
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </form>
+
+      <ol class="how">
+        <li><b>1</b> Popíšete problém</li>
+        <li><b>2</b> Ukážeme nejbližší řemeslníky</li>
+        <li><b>3</b> Napíšete nebo zavoláte</li>
+      </ol>
+    </section>
+
+    <!-- ==================== OBRAZOVKA 2: VÝSLEDKY ==================== -->
+    <section id="screen-results" class="screen-results" aria-label="Výsledky hledání" hidden>
+      <div class="mobile-tabs" role="tablist" aria-label="Zobrazení výsledků">
+        <button type="button" class="back-btn" data-action="back" aria-label="Změnit hledání">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" role="tab" id="tab-list" aria-controls="list-pane" aria-selected="true" data-tab="list">Seznam <span id="tab-count" class="tab-count"></span></button>
+        <button type="button" role="tab" id="tab-map" aria-controls="map-pane" aria-selected="false" data-tab="map">Mapa</button>
+      </div>
+
+      <div class="results" id="results" data-tab="list">
+        <div class="map-pane" id="map-pane" role="tabpanel" aria-labelledby="tab-map">
+          <div id="map" aria-label="Mapa s řemeslníky v okolí"></div>
+          <p id="map-fallback" class="map-fallback" hidden>Mapu se nepodařilo načíst (zkontrolujte připojení k internetu). Seznam řemeslníků funguje dál.</p>
+        </div>
+
+        <aside class="list-pane" id="list-pane" role="tabpanel" aria-labelledby="tab-list">
+          <div class="list-head">
+            <p id="summary" class="summary" aria-live="polite" tabindex="-1"></p>
+            <div id="gas-alert-results" class="gas-alert gas-alert-compact" role="alert" hidden></div>
+            <div class="list-tools">
+              <button type="button" class="btn btn-secondary btn-sm" data-action="back">← Změnit hledání</button>
+              <div class="sort">
+                <label for="sort-select">Řadit:</label>
+                <select id="sort-select">
+                  <option value="nearest">Nejbližší</option>
+                  <option value="rating">Nejlépe hodnocení</option>
+                  <option value="soonest">Nejdříve volný</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div id="cards" class="cards"></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- Patička (viditelné upozornění na ukázkový charakter webu) -->
+  <footer class="site-footer">
+    <strong>Ukázkový prototyp, data jsou smyšlená.</strong>
+    <span>Školní projekt · Základy podnikání · Mapové podklady © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">přispěvatelé OpenStreetMap</a></span>
+  </footer>
+
+  <!-- ==================== OKNO CHATU ==================== -->
+  <div id="chat" class="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="chat-dialog" role="dialog" aria-modal="true" aria-labelledby="chat-title" aria-describedby="chat-note">
+      <div class="chat-head">
+        <img id="chat-avatar" class="avatar" width="44" height="44" alt="">
+        <div class="chat-who">
+          <h2 id="chat-title"></h2>
+          <p id="chat-role"></p>
+        </div>
+        <button type="button" class="icon-btn" id="chat-clear" title="Smazat konverzaci" aria-label="Smazat konverzaci">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" class="icon-btn" data-close aria-label="Zavřít chat">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+      <p id="chat-note" class="chat-note">Demo: odpovědi řemeslníka jsou simulované, zpráva nikam skutečně neodchází.</p>
+      <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Konverzace"></div>
+      <form id="chat-form" class="chat-form">
+        <label for="chat-input" class="sr-only">Vaše zpráva</label>
+        <textarea id="chat-input" rows="1" placeholder="Napište zprávu…" maxlength="1000"></textarea>
+        <button type="submit" class="btn btn-primary">Odeslat</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
