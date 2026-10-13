@@ -1,31 +1,92 @@
 /* ==========================================================================
-   data.js – ukázková data pro prototyp „Řemeslník na dosah“
-   --------------------------------------------------------------------------
-   !! Všechna jména, telefony a e-maily jsou vymyšlené. Telefony jsou ve
-   !! tvaru +420 777 000 1xx, e-maily na doméně example.cz.
+   data.js – lokální (záložní) data pro FixIt. JEDINÝ ZDROJ PRAVDY pro seed:
+   z tohoto souboru generuje `node tools/build-seed.mjs` soubor supabase/seed.sql.
 
-   Data jsou záměrně v jednom poli objektů (CRAFTSMEN) a app.js je získává
-   přes funkci loadCraftsmen(). Pro ostrý provoz stačí tělo této funkce
-   nahradit načtením z databáze (např. Supabase) – zbytek aplikace se
-   nemění. Tvar jednoho záznamu je popsán u prvního řemeslníka.
+   !! Všechna jména, telefony a e-maily řemeslníků jsou vymyšlené (telefony
+   !! +420 777 000 1xx, e-maily na example.cz).
+   !! Ceny v PRICE_GUIDES jsou ILUSTRATIVNÍ (viz pole `source`).
    ========================================================================== */
+'use strict';
 
-/* Kategorie problémů. `icon` jsou SVG cesty pro viewBox 24×24 (obrys, bez výplně).
-   `trade` je název řemeslníka použitý v souhrnu výsledků. */
+/* --------------------------------------------------------------------------
+   Kategorie jako strom (max. 3 úrovně). `icon` je KLÍČ ikony (viz ICONS v
+   categories.js), `keywords` jsou slova bez diakritiky; hledají se od začátku
+   slova (koncová mezera = přesné slovo). Tvar odpovídá tabulce `categories`.
+   -------------------------------------------------------------------------- */
 const CATEGORIES = [
-  { id: 'voda',      label: 'Voda a odpady',        trade: 'instalatér',            icon: '<path d="M12 3s6 6.2 6 10.5A6 6 0 0 1 6 13.5C6 9.2 12 3 12 3z"/>' },
-  { id: 'elektro',   label: 'Elektřina',            trade: 'elektrikář',            icon: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>' },
-  { id: 'topeni',    label: 'Topení a plyn',        trade: 'topenář a plynař',      icon: '<path d="M12 22c4 0 7-2.7 7-6.5 0-3-2-5-3.5-6.5.2 2-.8 3-2 3 .5-3-1.5-6-4-8 0 4-4.5 6-4.5 11.5C5 19.3 8 22 12 22z"/>' },
-  { id: 'manzel',    label: 'Hodinový manžel',      trade: 'hodinový manžel',       icon: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>' },
-  { id: 'malovani',  label: 'Malování a podlahy',   trade: 'malíř a podlahář',      icon: '<rect x="4" y="3" width="14" height="6" rx="1.5"/><path d="M18 6h2v5h-8v3"/><rect x="10" y="14" width="4" height="7" rx="1"/>' },
-  { id: 'strecha',   label: 'Střecha a fasáda',     trade: 'pokrývač a fasádník',   icon: '<path d="M3 12 12 4l9 8M6 10v10h12V10"/>' },
-  { id: 'zahrada',   label: 'Zahrada a stromy',     trade: 'zahradník',             icon: '<path d="M12 22v-7"/><path d="M12 15c-4 0-6-2.5-6-5.5 0-2 1.3-3.5 3-4 .5-1.5 1.7-2.5 3-2.5s2.5 1 3 2.5c1.7.5 3 2 3 4 0 3-2 5.5-6 5.5z"/>' },
-  { id: 'zamecnik',  label: 'Zámečník a dveře',     trade: 'zámečník',              icon: '<circle cx="8" cy="15" r="4"/><path d="M11 12 20 3M16 7l3 3M14 9l2 2"/>' },
-  { id: 'klima',     label: 'Klimatizace',          trade: 'technik klimatizací',   icon: '<path d="M12 2v20M4 7l16 10M4 17 20 7"/>' },
-  { id: 'jine',      label: 'Jiné',                 trade: 'různé obory',           icon: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01"/>' },
-];
+  // ---- Dům a byt ----
+  { id: 'dum', parent_id: null, name: 'Dům a byt', icon: 'home', sort_order: 10, keywords: ['dum ', 'domacnost', 'byt '] },
+  { id: 'voda', parent_id: 'dum', name: 'Voda a odpady', icon: 'drop', sort_order: 10,
+    keywords: ['voda', 'vody', 'vodu', 'vodar', 'vodovod', 'potrubi', 'zatop', 'prosakuj', 'vana', 'vane', 'sprch', 'instalat'] },
+  { id: 'kohoutky', parent_id: 'voda', name: 'Kohoutky a baterie', icon: 'tap', sort_order: 10,
+    keywords: ['kohoutek', 'kohout', 'kape', 'tece', 'baterie', 'umyvadl', 'dres', 'tekouc'] },
+  { id: 'wc', parent_id: 'voda', name: 'WC', icon: 'drop', sort_order: 20,
+    keywords: ['wc', 'zachod', 'splach', 'klozet', 'zachodov'] },
+  { id: 'odpad', parent_id: 'voda', name: 'Ucpaný odpad', icon: 'drop', sort_order: 30,
+    keywords: ['odpad', 'ucpan', 'ucpa', 'zacpan', 'sifon', 'kanaliz'] },
+  { id: 'bojler', parent_id: 'voda', name: 'Bojler', icon: 'drop', sort_order: 40,
+    keywords: ['bojler', 'ohrivac', 'zasobnik', 'ohrev vody', 'teplou vodu'] },
+  { id: 'elektro', parent_id: 'dum', name: 'Elektro', icon: 'bolt', sort_order: 20,
+    keywords: ['elektr', 'kabel', 'vodic', 'jiskr', 'nabijec'] },
+  { id: 'zasuvky', parent_id: 'elektro', name: 'Zásuvky a vypínače', icon: 'bolt', sort_order: 10,
+    keywords: ['zasuvk', 'vypinac', 'zasuvce'] },
+  { id: 'jistice', parent_id: 'elektro', name: 'Jističe', icon: 'bolt', sort_order: 20,
+    keywords: ['jistic', 'pojistk', 'rozvadec', 'vypadl', 'vyhodil', 'zkrat', 'proud', 'elektromer'] },
+  { id: 'osvetleni', parent_id: 'elektro', name: 'Osvětlení', icon: 'bolt', sort_order: 30,
+    keywords: ['svetl', 'zarovk', 'lustr', 'svitidl', 'osvetlen'] },
+  { id: 'topeni', parent_id: 'dum', name: 'Topení a plyn', icon: 'flame', sort_order: 30,
+    keywords: ['topeni', 'topit', 'topi ', 'termostat', 'podlahovk', 'plyn'] },
+  { id: 'kotel', parent_id: 'topeni', name: 'Kotel', icon: 'flame', sort_order: 10,
+    keywords: ['kotel', 'kotle', 'spalin', 'plynov'] },
+  { id: 'radiatory', parent_id: 'topeni', name: 'Radiátory', icon: 'flame', sort_order: 20,
+    keywords: ['radiator', 'otopn', 'studen', 'odvzdus'] },
+  { id: 'podlahy-malovani', parent_id: 'dum', name: 'Podlahy a malování', icon: 'paint', sort_order: 40,
+    keywords: ['malovani', 'malovat', 'vymalov', 'podlah', 'parket', 'lamino', 'vinyl', 'tapet', 'stena', 'steny', 'sten ', 'omitk', 'sadrokarton', 'natir', 'natre', 'strop'] },
+  { id: 'okna-dvere', parent_id: 'dum', name: 'Okna a dveře', icon: 'door', sort_order: 50,
+    keywords: ['okn', 'dvere', 'dveri', 'parapet', 'zaluzi', 'tesneni'] },
+  { id: 'zamecnik', parent_id: 'okna-dvere', name: 'Zámečník a zabouchnuté dveře', icon: 'key', sort_order: 10,
+    keywords: ['zamek', 'zamk', 'zamyk', 'klic', 'zabouch', 'vlozk', 'zamcen', 'bezpecnostn', 'dvere', 'dveri'] },
+  { id: 'strecha', parent_id: 'dum', name: 'Střecha a fasáda', icon: 'roof', sort_order: 60,
+    keywords: ['strech', 'strese', 'tasky', 'tasek', 'krytin', 'fasad', 'okap', 'zateka', 'zatek', 'klempir', 'lisejnik', 'komin'] },
+  { id: 'manzel', parent_id: 'dum', name: 'Hodinový manžel', icon: 'wrench', sort_order: 70,
+    keywords: ['police', 'policku', 'namontov', 'montaz', 'smontov', 'nabytek', 'skrin', 'zaves', 'pripevn', 'uvolnen', 'ikea', 'kuchyn', 'drobn', 'vrzaj', 'dvirk', 'klik'] },
 
-/* Hotové obce pro případ, že se adresu nepodaří převést na souřadnice. */
+  // ---- Zahrada ----
+  { id: 'zahrada', parent_id: null, name: 'Zahrada', icon: 'tree', sort_order: 20, keywords: ['zahrad'] },
+  { id: 'stromy', parent_id: 'zahrada', name: 'Stromy', icon: 'tree', sort_order: 10, keywords: ['strom', 'vetev', 'vetve'] },
+  { id: 'kaceni', parent_id: 'stromy', name: 'Kácení', icon: 'tree', sort_order: 10,
+    keywords: ['kacet', 'kaceni', 'pokacet', 'porazit', 'padl strom', 'spadl strom'] },
+  { id: 'prorez', parent_id: 'stromy', name: 'Prořez', icon: 'tree', sort_order: 20,
+    keywords: ['orez', 'prorez', 'tuje', 'tuji', 'zkratit vetv'] },
+  { id: 'travnik', parent_id: 'zahrada', name: 'Trávník a údržba', icon: 'grass', sort_order: 20,
+    keywords: ['trav', 'sekac', 'sekat', 'sekani', 'travnik', 'kos ', 'keri', 'udrzb'] },
+  { id: 'ploty', parent_id: 'zahrada', name: 'Ploty', icon: 'fence', sort_order: 30,
+    keywords: ['plot ', 'plotu', 'ploty', 'plotem', 'zivy plot', 'zivopl', 'plotov'] },
+  { id: 'terasy', parent_id: 'zahrada', name: 'Terasy a dlažba', icon: 'deck', sort_order: 40,
+    keywords: ['teras', 'pergol', 'zamkov', 'chodnik', 'zahradni dlazb'] },
+  { id: 'zavlazovani', parent_id: 'zahrada', name: 'Zavlažování', icon: 'sprinkler', sort_order: 50,
+    keywords: ['zavlah', 'zavlaz', 'postrik', 'kapkov', 'rozstrik', 'sprinkler'] },
+
+  // ---- Stavba a rekonstrukce ----
+  { id: 'stavba', parent_id: null, name: 'Stavba a rekonstrukce', icon: 'brick', sort_order: 30, keywords: ['stavb', 'rekonstrukc', 'prestavb'] },
+  { id: 'zednik', parent_id: 'stavba', name: 'Zedník', icon: 'brick', sort_order: 10,
+    keywords: ['zedn', 'zed ', 'zdit', 'vyzdit', 'beton', 'prickov', 'pretrh', 'bourani', 'bourat', 'omitk'] },
+  { id: 'obklady', parent_id: 'stavba', name: 'Obklady a dlažby', icon: 'tiles', sort_order: 20,
+    keywords: ['obklad', 'dlazdic', 'dlazb', 'spar', 'koupeln'] },
+  { id: 'zatepleni', parent_id: 'stavba', name: 'Zateplení', icon: 'layers', sort_order: 30,
+    keywords: ['zateplen', 'polystyren', 'izolac', 'tepelna izolac', 'fasad', 'zatepl'] },
+
+  // ---- Klima a energie ----
+  { id: 'energie', parent_id: null, name: 'Klima a energie', icon: 'sun', sort_order: 40, keywords: ['energi', 'uspor'] },
+  { id: 'klimatizace', parent_id: 'energie', name: 'Klimatizace', icon: 'snow', sort_order: 10,
+    keywords: ['klimatizac', 'klima', 'split', 'chlazeni', 'ochlaz', 'vzduchotechnik'] },
+  { id: 'fotovoltaika', parent_id: 'energie', name: 'Fotovoltaika', icon: 'sun', sort_order: 20,
+    keywords: ['fotovolt', 'solarn', 'panel', 'strida', 'fve', 'akumulac'] },
+  { id: 'tepelna-cerpadla', parent_id: 'energie', name: 'Tepelná čerpadla', icon: 'heatpump', sort_order: 30,
+    keywords: ['tepelne cerpadl', 'tepelneho cerpadl', 'cerpadl'] },
+].map((c) => ({ ...c, slug: c.id }));
+
+/* Obce pro případ, že se adresu nepodaří převést na souřadnice. */
 const TOWNS = [
   { name: 'Rakovník',      lat: 50.1041, lng: 13.7310 },
   { name: 'Tuchlovice',    lat: 50.1381, lng: 13.9911 },
@@ -35,163 +96,194 @@ const TOWNS = [
   { name: 'Křivoklát',     lat: 50.0379, lng: 13.8704 },
 ];
 
-/* Řemeslníci (vymyšlení). Pole:
-   id, name, role (konkrétní označení), category (id z CATEGORIES), town,
-   lat/lng (přibližně, v okolí obce), phone, email, description,
-   verified (ověřená totožnost + živnost), rating (průměr 1–5), reviewCount,
-   review {author, stars, text} (ukázková recenze),
-   availability {text, days} – `text` se zobrazí, `days` slouží k řazení
-   „nejdříve volný“ (0 = dnes, 1 = zítra, …). */
-const CRAFTSMEN = [
-  {
-    id: 'r01', name: 'Pavel K.', role: 'Instalatér', category: 'voda', town: 'Rakovník',
-    lat: 50.1062, lng: 13.7385, phone: '+420 777 000 101', email: 'pavel.k@example.cz',
+/* --------------------------------------------------------------------------
+   Orientační ceny (tabulka price_guides). ILUSTRATIVNÍ údaje ze zadání projektu.
+   Co zadání neobsahovalo (výjezd, typický rozsah práce), je null – nic se
+   nevymýšlí. max_czk = null znamená otevřené rozpětí („od cca …“).
+   unit: 'h' = Kč/h, 'm2' = Kč/m², 'ks' = Kč za kus.
+   -------------------------------------------------------------------------- */
+const PRICE_SOURCE = 'Ilustrativní údaj pro školní projekt. Orientační ceny z let 2024–2026, převážně pražské; v okrese bývají nižší. Není to nabídka ani ceník.';
+const PRICE_GUIDES = [
+  { category_id: 'voda', unit: 'h', min_czk: 500, max_czk: 1200,
+    callout_min_czk: null, callout_max_czk: null, typical_hours_min: null, typical_hours_max: null,
+    emergency_surcharge_pct_min: 50, emergency_surcharge_pct_max: 100,
+    note: 'Sazba instalatéra.', source: PRICE_SOURCE },
+  { category_id: 'bojler', unit: 'ks', min_czk: 1000, max_czk: null,
+    callout_min_czk: null, callout_max_czk: null, typical_hours_min: null, typical_hours_max: null,
+    emergency_surcharge_pct_min: null, emergency_surcharge_pct_max: null,
+    note: 'Cena za demontáž bojleru. Montáž nového bojleru a materiál se účtují zvlášť.', source: PRICE_SOURCE },
+  { category_id: 'elektro', unit: 'h', min_czk: 300, max_czk: 900,
+    callout_min_czk: null, callout_max_czk: null, typical_hours_min: null, typical_hours_max: null,
+    emergency_surcharge_pct_min: null, emergency_surcharge_pct_max: null,
+    note: 'Sazba elektrikáře.', source: PRICE_SOURCE },
+  { category_id: 'manzel', unit: 'h', min_czk: 250, max_czk: 450,
+    callout_min_czk: null, callout_max_czk: null, typical_hours_min: null, typical_hours_max: null,
+    emergency_surcharge_pct_min: null, emergency_surcharge_pct_max: null,
+    note: 'Sazba hodinového manžela za drobné opravy a montáže.', source: PRICE_SOURCE },
+  { category_id: 'podlahy-malovani', unit: 'h', min_czk: 350, max_czk: null,
+    callout_min_czk: null, callout_max_czk: null, typical_hours_min: null, typical_hours_max: null,
+    emergency_surcharge_pct_min: null, emergency_surcharge_pct_max: null,
+    note: 'Zhruba tato sazba za hodinu práce malíře; materiál zvlášť.', source: PRICE_SOURCE },
+  { category_id: 'zatepleni', unit: 'm2', min_czk: 500, max_czk: null,
+    callout_min_czk: null, callout_max_czk: null, typical_hours_min: null, typical_hours_max: null,
+    emergency_surcharge_pct_min: null, emergency_surcharge_pct_max: null,
+    note: 'Zateplení polystyrenem, cena za m² od zhruba této částky.', source: PRICE_SOURCE },
+];
+
+/* --------------------------------------------------------------------------
+   Řemeslníci (vymyšlení). Pole:
+   id, name, role (označení), town, lat/lng, phone, email, description,
+   verified, rating, reviewCount, review {author, stars, text},
+   categoryIds (obory – kategorie ze stromu),
+   rules (týdenní okna: weekday 1 = pondělí … 7 = neděle, start/end „HH:MM“),
+   exceptions (výjimky relativně k dnešku: offset dní, available, note).
+   -------------------------------------------------------------------------- */
+const W = (days, start, end) => days.map((weekday) => ({ weekday, start, end }));
+const WORKDAYS = [1, 2, 3, 4, 5];
+
+const CRAFTSMEN_SEED = [
+  { id: 'r01', name: 'Pavel K.', role: 'Instalatér', town: 'Rakovník', lat: 50.1062, lng: 13.7385,
+    phone: '+420 777 000 101', email: 'pavel.k@example.cz',
     description: 'Opravy kohoutků, sifonů a baterií, čištění odpadů, výměna WC. Do hodiny od zavolání vím, jak velká oprava to bude.',
     verified: true, rating: 4.8, reviewCount: 37,
     review: { author: 'Jitka M.', stars: 5, text: 'Přijel druhý den ráno, kohoutek opravil za půl hodiny a uklidil po sobě.' },
-    availability: { text: 'zítra 8–12', days: 1 },
-  },
-  {
-    id: 'r02', name: 'Tomáš R.', role: 'Instalatér', category: 'voda', town: 'Tuchlovice',
-    lat: 50.1405, lng: 13.9852, phone: '+420 777 000 102', email: 'tomas.r@example.cz',
+    categoryIds: ['kohoutky', 'odpad', 'wc'],
+    rules: [...W(WORKDAYS, '08:00', '12:00'), ...W([2, 4], '15:00', '18:00')],
+    exceptions: [{ offset: 3, available: false, note: 'Dovolená' }] },
+  { id: 'r02', name: 'Tomáš R.', role: 'Instalatér', town: 'Tuchlovice', lat: 50.1405, lng: 13.9852,
+    phone: '+420 777 000 102', email: 'tomas.r@example.cz',
     description: 'Rodinné domy i byty: rozvody vody, bojlery, ucpané odpady. Pracuji i o víkendech po domluvě.',
     verified: false, rating: 4.6, reviewCount: 21,
     review: { author: 'Marek L.', stars: 4, text: 'Poctivá práce a férová cena, jen jsem čekal o den déle, než slíbil.' },
-    availability: { text: 'volno od pondělí', days: 4 },
-  },
-  {
-    id: 'r03', name: 'Jana S.', role: 'Instalatérka', category: 'voda', town: 'Kladno',
-    lat: 50.1511, lng: 14.0950, phone: '+420 777 000 103', email: 'jana.s@example.cz',
+    categoryIds: ['bojler', 'odpad', 'voda'],
+    rules: [...W(WORKDAYS, '07:00', '15:00'), ...W([6], '09:00', '13:00')],
+    exceptions: [] },
+  { id: 'r03', name: 'Jana S.', role: 'Instalatérka', town: 'Kladno', lat: 50.1511, lng: 14.0950,
+    phone: '+420 777 000 103', email: 'jana.s@example.cz',
     description: 'Havárie vody, vodoměry, rekonstrukce koupelen. Vždy předem řeknu orientační cenu.',
     verified: true, rating: 4.9, reviewCount: 54,
     review: { author: 'Petra V.', stars: 5, text: 'Prasklá hadička pod dřezem, přijela ještě ten den a vše vyřešila.' },
-    availability: { text: 'dnes 15–18', days: 0 },
-  },
-  {
-    id: 'r04', name: 'Martin V.', role: 'Elektrikář', category: 'elektro', town: 'Rakovník',
-    lat: 50.0998, lng: 13.7292, phone: '+420 777 000 104', email: 'martin.v@example.cz',
+    categoryIds: ['voda', 'kohoutky'],
+    rules: [...W(WORKDAYS, '15:00', '18:00'), ...W([3], '08:00', '12:00')],
+    exceptions: [] },
+  { id: 'r04', name: 'Martin V.', role: 'Elektrikář', town: 'Rakovník', lat: 50.0998, lng: 13.7292,
+    phone: '+420 777 000 104', email: 'martin.v@example.cz',
     description: 'Opravy zásuvek, jističů a rozvaděčů, výměna osvětlení, revize elektroinstalace v bytech i domech.',
     verified: true, rating: 4.7, reviewCount: 42,
     review: { author: 'Hana B.', stars: 5, text: 'Našel příčinu, proč mi stále vypadával jistič. Vše vysvětlil srozumitelně.' },
-    availability: { text: 'zítra 13–17', days: 1 },
-  },
-  {
-    id: 'r05', name: 'Lukáš H.', role: 'Elektrikář', category: 'elektro', town: 'Nové Strašecí',
-    lat: 50.1580, lng: 13.9061, phone: '+420 777 000 105', email: 'lukas.h@example.cz',
+    categoryIds: ['zasuvky', 'jistice', 'osvetleni'],
+    rules: W(WORKDAYS, '13:00', '17:00'),
+    exceptions: [{ offset: 1, available: false, note: 'Školení' }] },
+  { id: 'r05', name: 'Lukáš H.', role: 'Elektrikář', town: 'Nové Strašecí', lat: 50.1580, lng: 13.9061,
+    phone: '+420 777 000 105', email: 'lukas.h@example.cz',
     description: 'Elektroinstalace v novostavbách i rekonstrukcích, chytré vypínače, nabíjecí stanice pro auta.',
     verified: false, rating: 4.5, reviewCount: 18,
     review: { author: 'Roman T.', stars: 4, text: 'Dobrá práce, jen komunikace e-mailem trvala déle.' },
-    availability: { text: 'volno od středy', days: 3 },
-  },
-  {
-    id: 'r06', name: 'Ondřej B.', role: 'Elektrikář', category: 'elektro', town: 'Kladno',
-    lat: 50.1389, lng: 14.1124, phone: '+420 777 000 106', email: 'ondrej.b@example.cz',
+    categoryIds: ['zasuvky', 'osvetleni', 'elektro'],
+    rules: W([3, 4, 5], '08:00', '16:00'),
+    exceptions: [{ offset: 2, available: true, note: 'Extra den' }] },
+  { id: 'r06', name: 'Ondřej B.', role: 'Elektrikář', town: 'Kladno', lat: 50.1389, lng: 14.1124,
+    phone: '+420 777 000 106', email: 'ondrej.b@example.cz',
     description: 'Hledání poruch, výpadky proudu, opravy po zkratu. Mám revizní oprávnění pro běžné domácnosti.',
     verified: true, rating: 4.9, reviewCount: 63,
     review: { author: 'Alena P.', stars: 5, text: 'Přijel večer, nejde světlo vyřešil za deset minut. Doporučuji.' },
-    availability: { text: 'pozítří 8–12', days: 2 },
-  },
-  {
-    id: 'r07', name: 'Karel D.', role: 'Topenář a plynař', category: 'topeni', town: 'Slaný',
-    lat: 50.2268, lng: 14.0801, phone: '+420 777 000 107', email: 'karel.d@example.cz',
+    categoryIds: ['jistice', 'osvetleni', 'elektro'],
+    rules: [...W(WORKDAYS, '08:00', '12:00'), ...W(WORKDAYS, '17:00', '20:00')],
+    exceptions: [] },
+  { id: 'r07', name: 'Karel D.', role: 'Topenář a plynař', town: 'Slaný', lat: 50.2268, lng: 14.0801,
+    phone: '+420 777 000 107', email: 'karel.d@example.cz',
     description: 'Servis plynových kotlů, výměna radiátorů, odvzdušnění a vyvážení topné soustavy před sezónou.',
     verified: true, rating: 4.4, reviewCount: 29,
     review: { author: 'Eliška K.', stars: 4, text: 'Kotel po servisu běží tišeji. Termín jsme museli trochu posunout.' },
-    availability: { text: 'volno od pondělí', days: 4 },
-  },
-  {
-    id: 'r08', name: 'Radek M.', role: 'Topenář', category: 'topeni', town: 'Rakovník',
-    lat: 50.1109, lng: 13.7248, phone: '+420 777 000 108', email: 'radek.m@example.cz',
+    categoryIds: ['kotel', 'radiatory'],
+    rules: W([1, 2, 3, 4], '08:00', '16:00'),
+    exceptions: [] },
+  { id: 'r08', name: 'Radek M.', role: 'Topenář', town: 'Rakovník', lat: 50.1109, lng: 13.7248,
+    phone: '+420 777 000 108', email: 'radek.m@example.cz',
     description: 'Radiátory, podlahové topení, výměna oběhových čerpadel a termostatů. Servis i o víkendu.',
     verified: true, rating: 4.8, reviewCount: 33,
     review: { author: 'Ivo Č.', stars: 5, text: 'Radiátor v obýváku byl studený, během hodiny topil jako nový.' },
-    availability: { text: 'zítra 8–12', days: 1 },
-  },
-  {
-    id: 'r09', name: 'Michal T.', role: 'Hodinový manžel', category: 'manzel', town: 'Tuchlovice',
-    lat: 50.1349, lng: 13.9967, phone: '+420 777 000 109', email: 'michal.t@example.cz',
+    categoryIds: ['radiatory', 'topeni'],
+    rules: [...W(WORKDAYS, '08:00', '12:00'), ...W([6, 7], '09:00', '13:00')],
+    exceptions: [] },
+  { id: 'r09', name: 'Michal T.', role: 'Hodinový manžel', town: 'Tuchlovice', lat: 50.1349, lng: 13.9967,
+    phone: '+420 777 000 109', email: 'michal.t@example.cz',
     description: 'Montáž nábytku a polic, drobné opravy v domácnosti, výměna klik, těsnění oken a dveří.',
     verified: false, rating: 4.6, reviewCount: 47,
     review: { author: 'Lenka F.', stars: 5, text: 'Za jedno odpoledne zvládl smontovat skříň, pověsit police i opravit dvířka.' },
-    availability: { text: 'zítra 13–17', days: 1 },
-  },
-  {
-    id: 'r10', name: 'Petr Z.', role: 'Hodinový manžel', category: 'manzel', town: 'Kladno',
-    lat: 50.1442, lng: 14.1198, phone: '+420 777 000 110', email: 'petr.z@example.cz',
+    categoryIds: ['manzel'],
+    rules: [...W(WORKDAYS, '13:00', '17:00'), ...W([6], '08:00', '12:00')],
+    exceptions: [] },
+  { id: 'r10', name: 'Petr Z.', role: 'Hodinový manžel', town: 'Kladno', lat: 50.1442, lng: 14.1198,
+    phone: '+420 777 000 110', email: 'petr.z@example.cz',
     description: 'Drobné zednické a truhlářské práce, montáž kuchyní, opravy po bytových revitalizacích.',
     verified: false, rating: 4.3, reviewCount: 15,
     review: { author: 'Zuzana D.', stars: 4, text: 'Solidní práce, ceny odpovídají. Příště bych uvítala dřívější potvrzení termínu.' },
-    availability: { text: 'volno od čtvrtka', days: 5 },
-  },
-  {
-    id: 'r11', name: 'Eva N.', role: 'Malířka', category: 'malovani', town: 'Rakovník',
-    lat: 50.1015, lng: 13.7421, phone: '+420 777 000 111', email: 'eva.n@example.cz',
+    categoryIds: ['manzel', 'zednik'],
+    rules: [...W([4, 5], '08:00', '16:00'), ...W([6], '08:00', '14:00')],
+    exceptions: [] },
+  { id: 'r11', name: 'Eva N.', role: 'Malířka', town: 'Rakovník', lat: 50.1015, lng: 13.7421,
+    phone: '+420 777 000 111', email: 'eva.n@example.cz',
     description: 'Malování bytů a domů, štukování, tapetování. Pracuji čistě, nábytek přikrývám a po práci uklízím.',
     verified: true, rating: 4.9, reviewCount: 26,
     review: { author: 'Tereza H.', stars: 5, text: 'Vymalovaný byt 3+1 za dva dny, žádná skvrna, krásně rovné hrany.' },
-    availability: { text: 'volno od pondělí', days: 4 },
-  },
-  {
-    id: 'r12', name: 'Josef L.', role: 'Malíř a podlahář', category: 'malovani', town: 'Stochov',
-    lat: 50.1495, lng: 13.9591, phone: '+420 777 000 112', email: 'josef.l@example.cz',
+    categoryIds: ['podlahy-malovani'],
+    rules: W([1, 2, 3, 4], '08:00', '16:00'),
+    exceptions: [] },
+  { id: 'r12', name: 'Josef L.', role: 'Malíř a podlahář', town: 'Stochov', lat: 50.1495, lng: 13.9591,
+    phone: '+420 777 000 112', email: 'josef.l@example.cz',
     description: 'Pokládka plovoucích podlah a vinylu, broušení parket, malování stropů a stěn.',
     verified: false, rating: 4.5, reviewCount: 31,
     review: { author: 'Michaela S.', stars: 4, text: 'Podlaha v obýváku vypadá skvěle. Trochu se protáhla dodávka materiálu.' },
-    availability: { text: 'volno od středy', days: 3 },
-  },
-  {
-    id: 'r13', name: 'Vojtěch P.', role: 'Pokrývač', category: 'strecha', town: 'Křivoklát',
-    lat: 50.0402, lng: 13.8741, phone: '+420 777 000 113', email: 'vojtech.p@example.cz',
+    categoryIds: ['podlahy-malovani'],
+    rules: W([3, 4, 5], '07:00', '15:00'),
+    exceptions: [] },
+  { id: 'r13', name: 'Vojtěch P.', role: 'Pokrývač', town: 'Křivoklát', lat: 50.0402, lng: 13.8741,
+    phone: '+420 777 000 113', email: 'vojtech.p@example.cz',
     description: 'Opravy střech a komínů, výměna tašek, oplechování, zatékání do střešního pláště.',
     verified: true, rating: 4.7, reviewCount: 19,
     review: { author: 'Dagmar R.', stars: 5, text: 'Zatékání po bouři opravil provizorně ještě týž den, pak přijel na pořádnou opravu.' },
-    availability: { text: 'pozítří 8–12', days: 2 },
-  },
-  {
-    id: 'r14', name: 'Radim Š.', role: 'Pokrývač a klempíř', category: 'strecha', town: 'Rakovník',
-    lat: 50.0965, lng: 13.7358, phone: '+420 777 000 114', email: 'radim.s@example.cz',
+    categoryIds: ['strecha'],
+    rules: W(WORKDAYS, '08:00', '12:00'),
+    exceptions: [] },
+  { id: 'r14', name: 'Radim Š.', role: 'Pokrývač a klempíř', town: 'Rakovník', lat: 50.0965, lng: 13.7358,
+    phone: '+420 777 000 114', email: 'radim.s@example.cz',
     description: 'Okapy, svody, klempířské prvky, nátěry střech a fasády. Pracuji s lešením i lanem.',
     verified: false, rating: 4.4, reviewCount: 12,
     review: { author: 'Václav O.', stars: 4, text: 'Okapy vyměnil rychle a čistě. Cena byla trochu vyšší, než jsem čekal.' },
-    availability: { text: 'volno od čtvrtka', days: 5 },
-  },
-  {
-    id: 'r15', name: 'Zdeněk F.', role: 'Zahradník', category: 'zahrada', town: 'Lány',
-    lat: 50.1269, lng: 13.9502, phone: '+420 777 000 115', email: 'zdenek.f@example.cz',
+    categoryIds: ['strecha'],
+    rules: W([4, 5], '08:00', '16:00'),
+    exceptions: [] },
+  { id: 'r15', name: 'Zdeněk F.', role: 'Zahradník', town: 'Lány', lat: 50.1269, lng: 13.9502,
+    phone: '+420 777 000 115', email: 'zdenek.f@example.cz',
     description: 'Řez a kácení stromů, sekání trávy, údržba živých plotů, jarní a podzimní úklid zahrad.',
     verified: true, rating: 4.6, reviewCount: 22,
     review: { author: 'Božena J.', stars: 5, text: 'Zahrada po zimě zase vypadá k světu. Tuje ořezal přesně podle domluvy.' },
-    availability: { text: 'volno od pondělí', days: 4 },
-  },
-  {
-    id: 'r16', name: 'Libor C.', role: 'Zámečník', category: 'zamecnik', town: 'Kladno',
-    lat: 50.1536, lng: 14.1067, phone: '+420 777 000 116', email: 'libor.c@example.cz',
+    categoryIds: ['kaceni', 'prorez', 'travnik', 'ploty'],
+    rules: [...W(WORKDAYS, '08:00', '16:00'), ...W([6], '08:00', '12:00')],
+    exceptions: [] },
+  { id: 'r16', name: 'Libor C.', role: 'Zámečník', town: 'Kladno', lat: 50.1536, lng: 14.1067,
+    phone: '+420 777 000 116', email: 'libor.c@example.cz',
     description: 'Otevírání zabouchnutých dveří, výměna zámků a vložek, zabezpečení dveří. Nonstop pohotovost.',
     verified: true, rating: 4.8, reviewCount: 38,
     review: { author: 'Filip A.', stars: 5, text: 'Zabouchnuté dveře otevřel bez poškození, přijel do čtyřiceti minut.' },
-    availability: { text: 'dnes večer (pohotovost)', days: 0 },
-  },
-  {
-    id: 'r17', name: 'Dana H.', role: 'Zámečnice', category: 'zamecnik', town: 'Rakovník',
-    lat: 50.1078, lng: 13.7214, phone: '+420 777 000 117', email: 'dana.h@example.cz',
+    categoryIds: ['zamecnik'],
+    rules: W([1, 2, 3, 4, 5, 6, 7], '00:00', '23:59'),
+    exceptions: [] },
+  { id: 'r17', name: 'Dana H.', role: 'Zámečnice', town: 'Rakovník', lat: 50.1078, lng: 13.7214,
+    phone: '+420 777 000 117', email: 'dana.h@example.cz',
     description: 'Výměna vložek a kování, opravy vchodových dveří, výroba drobných kovových prvků na zakázku.',
     verified: false, rating: 4.6, reviewCount: 16,
     review: { author: 'Radka N.', stars: 5, text: 'Dveře, které se zasekávaly, fungují jako nové. Příjemné jednání.' },
-    availability: { text: 'zítra 8–12', days: 1 },
-  },
-  {
-    id: 'r18', name: 'Filip J.', role: 'Technik klimatizací', category: 'klima', town: 'Slaný',
-    lat: 50.2331, lng: 14.0935, phone: '+420 777 000 118', email: 'filip.j@example.cz',
+    categoryIds: ['zamecnik', 'okna-dvere'],
+    rules: W(WORKDAYS, '08:00', '12:00'),
+    exceptions: [] },
+  { id: 'r18', name: 'Filip J.', role: 'Technik klimatizací', town: 'Slaný', lat: 50.2331, lng: 14.0935,
+    phone: '+420 777 000 118', email: 'filip.j@example.cz',
     description: 'Montáž a servis split klimatizací, čištění, doplnění chladiva, poradenství při výběru.',
     verified: true, rating: 4.7, reviewCount: 24,
     review: { author: 'Kamila Z.', stars: 5, text: 'Klimatizace nainstalovaná za jeden den, vše funguje a nic nehlučí.' },
-    availability: { text: 'volno od středy', days: 3 },
-  },
+    categoryIds: ['klimatizace'],
+    rules: W([3, 4, 5], '08:00', '16:00'),
+    exceptions: [] },
 ];
-
-/* Zdroj dat pro aplikaci. Později stačí nahradit např. voláním Supabase:
-     const { data } = await supabase.from('craftsmen').select('*'); return data;
-   (pole v databázi by měla odpovídat tvaru záznamů výše). */
-async function loadCraftsmen() {
-  return CRAFTSMEN;
-}

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   style.css – Řemeslník na dosah
+   style.css – FixIt
    Paleta (CSS proměnné):
    --red   #BA1200  hlavní tlačítka a důležité akcenty (text na ní bílý)
    --navy  #031927  hlavní text, nadpisy, tmavé plochy
@@ -75,8 +75,9 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; outline: n
   letter-spacing: .08em; padding: 2px 8px; border-radius: 999px;
 }
 .site-header {
-  background: var(--white); padding: 12px 24px;
+  background: var(--white); padding: 10px 24px;
   box-shadow: 0 1px 0 rgba(80, 138, 168, .35); position: relative; z-index: 5;
+  display: flex; align-items: center; gap: 8px 24px; flex-wrap: wrap;
 }
 .logo { display: inline-flex; align-items: center; gap: 10px; color: var(--navy); text-decoration: none; font-weight: 600; font-size: 19px; }
 .logo b { color: var(--red); font-weight: 800; }
@@ -151,36 +152,49 @@ legend small, .field-label small { font-weight: 500; font-size: 14px; color: var
   border-radius: 50%; background: var(--navy); color: var(--white); font-size: 14px; font-weight: 800;
 }
 
-/* Dlaždice kategorií (radio skryté vizuálně, ne pro čtečky/klávesnici) */
-.tiles { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
-.tile { position: relative; display: block; cursor: pointer; }
-.tile input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
 .tile-box {
-  display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; height: 100%;
-  padding: 14px 8px 12px; text-align: center; border-radius: var(--radius-sm);
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; height: 100%;
+  padding: 14px 8px 12px; text-align: center; border-radius: var(--radius-sm); font: inherit; color: var(--navy); cursor: pointer;
   background: var(--mist); border: 2px solid transparent;
   transition: transform .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
-.tile-icon { color: var(--steel); display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: var(--white); transition: .15s ease; }
+.tile-icon { color: var(--steel); display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: var(--white); transition: .15s ease; flex: none; }
 .tile-label { font-weight: 700; font-size: 13.5px; line-height: 1.25; }
-.tile:hover .tile-box { transform: translateY(-2px); border-color: var(--steel); }
-.tile input:checked + .tile-box { background: var(--sky); border-color: var(--navy); box-shadow: 0 6px 16px rgba(3, 25, 39, .18); }
-.tile input:checked + .tile-box .tile-icon { background: var(--navy); color: var(--sky); }
-.tile input:focus-visible + .tile-box { outline: 3px solid var(--navy); outline-offset: 2px; box-shadow: 0 0 0 6px var(--sky); }
-.tile input:checked + .tile-box::after {
+.tile-more { font-size: 12px; font-weight: 600; color: var(--navy-soft); }
+.tile-box:hover { transform: translateY(-2px); border-color: var(--steel); }
+.tile-box.is-selected { background: var(--sky); border-color: var(--navy); box-shadow: 0 6px 16px rgba(3, 25, 39, .18); }
+.tile-box.is-selected .tile-icon { background: var(--navy); color: var(--sky); }
+.tile-box.has-selected { border-color: var(--navy); }
+.tile-box.is-selected::after {
   content: ''; position: absolute; top: 8px; right: 8px; width: 18px; height: 18px; border-radius: 50%;
   background: var(--navy) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%239DD1F1' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat;
 }
 
-input[type="text"], textarea, select {
+/* Výběr kategorie: hledání, drobečky, výsledky */
+.cat-search { margin-bottom: 10px; }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; margin-bottom: 10px; font-size: 14px; }
+.crumb { background: none; border: 0; padding: 4px 6px; font: 600 14px var(--font); color: var(--navy); cursor: pointer; border-radius: 6px; text-decoration: underline; text-decoration-color: var(--steel); }
+.crumb[aria-current="page"] { text-decoration: none; background: var(--sky); cursor: default; }
+.crumb-sep { color: var(--steel); font-weight: 700; }
+.cat-whole { margin-bottom: 10px; }
+.cat-results { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.cat-result { width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; padding: 8px 12px; border-radius: var(--radius-sm); border: 2px solid transparent; background: var(--mist); font: inherit; color: var(--navy); cursor: pointer; }
+.cat-result:hover { border-color: var(--steel); background: var(--sky); }
+.cat-result small { display: block; font-size: 12.5px; color: var(--navy-soft); }
+.cat-result .tile-icon { width: 38px; height: 38px; }
+.cat-selected { margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm); background: var(--sky); font-size: 15px; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+.cat-selected .link-btn { margin: 0; color: var(--navy); }
+
+input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="number"], input[type="tel"], input[type="date"], input[type="time"], textarea, select {
   width: 100%; font: 500 17px/1.4 var(--font); color: var(--navy);
   padding: 14px 16px; border-radius: var(--radius-sm); background: var(--white);
   border: 2px solid var(--steel);
   transition: border-color .15s ease, box-shadow .15s ease;
 }
-input[type="text"]::placeholder, textarea::placeholder { color: #5b7280; }
-input[type="text"]:hover, textarea:hover, select:hover { border-color: var(--navy); }
-input[type="text"]:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--navy); outline-offset: 1px; box-shadow: 0 0 0 6px var(--sky); border-color: var(--navy); }
+input::placeholder, textarea::placeholder { color: #5b7280; }
+input:hover:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea:hover, select:hover { border-color: var(--navy); }
+input:focus-visible:not([type="checkbox"]):not([type="radio"]), textarea:focus-visible, select:focus-visible { outline: 3px solid var(--navy); outline-offset: 1px; box-shadow: 0 0 0 6px var(--sky); border-color: var(--navy); }
 textarea { resize: vertical; min-height: 92px; }
 .help { margin-top: 8px; font-size: 14px; color: var(--navy-soft); }
 .help:empty { display: none; }
@@ -248,7 +262,8 @@ textarea { resize: vertical; min-height: 92px; }
 .sort { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
 .sort select { width: auto; padding: 8px 12px; font-size: 14px; border-radius: 999px; font-weight: 600; }
 
-.cards { flex: 1; overflow-y: auto; padding: 14px 16px 24px; display: grid; gap: 14px; align-content: start; scroll-padding: 16px; }
+.list-scroll { flex: 1; overflow-y: auto; scroll-padding: 16px; }
+.cards { padding: 14px 16px 24px; display: grid; gap: 14px; align-content: start; }
 .empty { padding: 24px; text-align: center; font-weight: 600; }
 
 .card {
@@ -370,7 +385,7 @@ textarea { resize: vertical; min-height: 92px; }
 @media (max-width: 899px) {
   .site-header { padding: 10px 16px; }
   .screen-form { padding: 28px 14px 36px; }
-  .tiles { grid-template-columns: repeat(3, 1fr); }
+  .tiles { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
   .how { grid-template-columns: 1fr; gap: 8px; max-width: 360px; }
 
   /* Záložky Seznam / Mapa */
@@ -401,3 +416,226 @@ textarea { resize: vertical; min-height: 92px; }
   .chat-dialog { border-radius: 18px; }
   .modal { padding: 8px; }
 }
+
+/* ==========================================================================
+   FixIt – hlavička, role, přihlášení
+   ========================================================================== */
+.mode-note { font-size: 12.5px; opacity: .85; }
+.main-nav { display: flex; flex-wrap: wrap; gap: 4px 6px; flex: 1; min-width: 0; }
+.main-nav a {
+  color: var(--navy); font-weight: 700; font-size: 15px; text-decoration: none;
+  padding: 8px 14px; border-radius: 999px; border: 2px solid transparent;
+}
+.main-nav a:hover { background: var(--mist); color: var(--navy); }
+.main-nav a[aria-current="page"] { background: var(--navy); color: var(--white); }
+.header-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-left: auto; }
+.role-switch select {
+  width: auto; padding: 7px 34px 7px 14px; font-size: 14px; font-weight: 700; border-radius: 999px; border-color: var(--navy);
+  background-color: var(--white);
+}
+.auth-area { display: flex; align-items: center; gap: 10px; }
+.user-chip {
+  max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-weight: 700; font-size: 14px; padding: 6px 12px; border-radius: 999px; background: var(--mist);
+}
+.btn-block { width: 100%; }
+
+/* ---------- Dialogy (role, přihlášení) ---------- */
+.dialog {
+  position: relative; width: min(480px, 100%); max-height: 100%; overflow-y: auto; background: var(--white);
+  border-radius: 24px; padding: 28px 26px 24px; box-shadow: 0 24px 60px rgba(3, 25, 39, .45); animation: pop .2s ease-out;
+}
+.dialog h2 { font-size: 24px; font-weight: 800; letter-spacing: -.01em; margin-bottom: 6px; }
+.dialog-x { position: absolute; top: 12px; right: 12px; }
+.muted-lg { color: var(--navy-soft); margin-bottom: 18px; }
+.dialog-role { width: min(560px, 100%); text-align: center; }
+.role-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.role-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 20px 14px; text-align: center;
+  border-radius: var(--radius); border: 2px solid var(--steel); background: var(--mist); color: var(--navy);
+  font: 500 14px/1.35 var(--font); cursor: pointer; transition: .15s ease;
+}
+.role-card strong { font-size: 18px; font-weight: 800; }
+.role-card svg { color: var(--red); }
+.role-card:hover { background: var(--sky); border-color: var(--navy); transform: translateY(-2px); }
+.role-skip { font-size: 15px; }
+
+.auth-tabs { display: flex; gap: 6px; margin: 14px 0 16px; }
+.auth-tabs [role="tab"] {
+  flex: 1; font: 700 15px var(--font); padding: 10px; border-radius: 999px; cursor: pointer;
+  background: var(--mist); color: var(--navy); border: 2px solid transparent;
+}
+.auth-tabs [role="tab"][aria-selected="true"] { background: var(--navy); color: var(--white); }
+.form-row { display: grid; gap: 6px; margin: 0 0 16px; border: 0; padding: 0; min-width: 0; }
+.form-row > label, .form-row legend, .form-row label.lbl { font-weight: 700; font-size: 15px; padding: 0; }
+.form-row label small, .form-row legend small { font-weight: 500; color: var(--navy-soft); }
+.form-row input[type="text"], .form-row input[type="email"], .form-row input[type="password"], .form-row input[type="number"], .form-row input[type="tel"] { padding: 11px 14px; font-size: 16px; }
+.form-row-narrow { max-width: 220px; }
+.two-col { grid-template-columns: 1fr 1fr; gap: 14px; }
+.two-col > div { display: grid; gap: 6px; }
+.role-radios { grid-auto-flow: column; justify-content: start; align-items: center; gap: 18px; }
+.role-radios legend { margin-right: 6px; float: left; }
+.role-radios label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.notice-inline { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--mist); border-left: 5px solid var(--steel); font-size: 14.5px; margin: 8px 0; }
+.notice-demo { background: var(--sky); border-left-color: var(--navy); }
+.notice-ok { background: #dff3e4; border-left-color: #2f7d46; }
+.auth-links { display: flex; justify-content: space-between; margin-top: 10px; }
+.auth-links .link-btn { margin: 0; }
+
+/* ---------- Toasty ---------- */
+#toasts { position: fixed; z-index: 4000; left: 50%; bottom: 20px; transform: translateX(-50%); display: grid; gap: 8px; width: min(440px, calc(100% - 24px)); pointer-events: none; }
+.toast { padding: 12px 16px; border-radius: var(--radius-sm); background: var(--navy); color: var(--white); font-weight: 600; font-size: 14.5px; box-shadow: var(--shadow); animation: pop .2s ease-out; }
+.toast-ok { background: #1f5f35; }
+.toast-error { background: var(--red); }
+
+/* ---------- Našeptávání adres ---------- */
+.combo { position: relative; }
+.suggest-list {
+  position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 6px; list-style: none;
+  background: var(--white); border: 2px solid var(--navy); border-radius: var(--radius-sm); box-shadow: var(--shadow); max-height: 320px; overflow-y: auto;
+}
+.suggest-list [role="option"] { padding: 9px 12px; border-radius: 8px; cursor: pointer; display: grid; gap: 1px; }
+.suggest-list [role="option"] small { color: var(--navy-soft); font-size: 12.5px; }
+.suggest-list [role="option"]:hover, .suggest-list [role="option"][aria-selected="true"] { background: var(--sky); }
+.suggest-credit { padding: 6px 12px 2px; text-align: right; }
+.mapy-logo-inline { display: inline-block; vertical-align: middle; }
+.mapy-logo-inline img { display: block; }
+.mapy-logo { display: block; margin: 0 0 8px 8px !important; background: rgba(255, 255, 255, .85); border-radius: 6px; padding: 2px 6px; }
+.mapy-logo img { display: block; height: 30px; width: auto; }
+.map-notice { position: absolute; z-index: 800; left: 12px; right: 12px; top: 12px; background: var(--red); color: var(--white); font-weight: 600; font-size: 14px; padding: 10px 14px; border-radius: var(--radius-sm); box-shadow: var(--shadow); }
+
+/* ---------- Výsledky: filtr, odhad ceny, karty ---------- */
+.check-pill { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; padding: 7px 14px; border-radius: 999px; border: 2px solid var(--navy); background: var(--white); cursor: pointer; }
+.check-pill:has(input:checked) { background: var(--navy); color: var(--white); }
+.check-pill:has(input:checked) .muted { color: var(--sky); }
+.check-pill input { width: 18px; height: 18px; accent-color: var(--red); margin: 0; }
+.estimate-wrap:empty { display: none; }
+.estimate-wrap { padding: 14px 16px 0; }
+.estimate { background: var(--white); border-radius: var(--radius); padding: 14px 16px; border-left: 6px solid var(--red); box-shadow: var(--shadow-sm); display: grid; gap: 8px; }
+.estimate h3 { font-size: 17px; font-weight: 800; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-block; background: var(--sky); color: var(--navy); font-size: 11.5px; font-weight: 700; padding: 2px 10px; border-radius: 999px; letter-spacing: .02em; }
+.est-for { font-size: 14px; color: var(--navy-soft); }
+.est-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.est-rate { font-size: 17px; font-weight: 800; color: var(--navy); }
+.est-note { font-size: 14px; color: var(--navy-soft); }
+.est-more summary { cursor: pointer; font-weight: 700; font-size: 14.5px; }
+.est-more ul { margin: 6px 0 0; padding-left: 20px; font-size: 14px; display: grid; gap: 2px; }
+.est-disclaimer { font-size: 14px; }
+.est-source { font-size: 12.5px; color: var(--navy-soft); }
+.fav-btn {
+  flex: none; width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--steel); background: var(--white); color: var(--steel);
+  display: grid; place-items: center; cursor: pointer; transition: .15s ease; align-self: flex-start;
+}
+.fav-btn svg { fill: none; stroke: currentColor; }
+.fav-btn:hover { border-color: var(--red); color: var(--red); }
+.fav-btn[aria-pressed="true"] { background: var(--red); border-color: var(--red); color: var(--white); }
+.fav-btn[aria-pressed="true"] svg { fill: currentColor; }
+.rate-line { font-size: 14.5px; }
+.avail-today span { background: #dff3e4; padding: 2px 10px; border-radius: 999px; }
+.contact.locked { display: flex; align-items: center; gap: 6px; color: var(--navy-soft); font-size: 13.5px; }
+.contact.locked a { color: var(--red); font-weight: 600; }
+
+/* ==========================================================================
+   Stránky (poplatky, profil, registrace)
+   ========================================================================== */
+.page { flex: 1; background: linear-gradient(180deg, var(--sky) -40%, var(--mist) 220px); padding: 36px 20px 56px; overflow-y: auto; }
+.page-inner { max-width: 960px; margin: 0 auto; display: grid; gap: 20px; }
+.page-narrow { max-width: 720px; }
+.page h1 { font-size: clamp(28px, 4.5vw, 42px); line-height: 1.12; font-weight: 800; letter-spacing: -.02em; }
+.page-h2 { font-size: 21px; font-weight: 800; margin-top: 8px; }
+.lead-left { color: var(--navy-soft); font-size: 17px; max-width: 640px; }
+.note-box { background: var(--white); border-left: 6px solid var(--red); border-radius: var(--radius-sm); padding: 14px 18px; box-shadow: var(--shadow-sm); }
+.note-box p + p { margin-top: 10px; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.panel { background: var(--white); border-radius: var(--radius); padding: clamp(16px, 3vw, 28px); box-shadow: var(--shadow-sm); border: 1px solid rgba(80, 138, 168, .3); }
+.fee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.fee-card { background: var(--white); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow-sm); border: 2px solid transparent; display: grid; gap: 8px; align-content: start; color: var(--navy); text-decoration: none; }
+.fee-card h2 { font-size: 19px; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fee-card ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 15px; }
+.fee-price { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.fee-price small { font-size: 15px; font-weight: 600; color: var(--navy-soft); }
+.fee-free { border-color: #2f7d46; }
+.fee-premium { border-color: var(--red); }
+.pro-link:hover { border-color: var(--navy); box-shadow: var(--shadow); color: var(--navy); }
+.calc { background: var(--navy); color: var(--white); border-radius: var(--radius); padding: clamp(18px, 3vw, 28px); display: grid; gap: 14px; }
+.calc h2 { font-size: 21px; font-weight: 800; }
+.calc-label { font-weight: 700; }
+.calc-row { display: flex; gap: 14px; align-items: center; margin: 8px 0 12px; }
+.calc-row input[type="range"] { flex: 1; accent-color: var(--red); height: 28px; }
+.calc-row input[type="number"] { width: 96px; flex: none; }
+.check-line { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.check-line input { width: 20px; height: 20px; accent-color: var(--red); }
+.calc-out { display: block; background: var(--white); color: var(--navy); border-radius: var(--radius-sm); padding: 14px 18px; }
+.calc-total { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+.calc-total span { font-size: 16px; font-weight: 600; color: var(--navy-soft); }
+.calc-lines { margin: 6px 0; padding-left: 20px; }
+.faq { display: grid; gap: 8px; }
+.faq h2 { font-size: 21px; font-weight: 800; margin-bottom: 4px; }
+.faq details { background: var(--white); border-radius: var(--radius-sm); padding: 12px 16px; box-shadow: var(--shadow-sm); }
+.faq summary { cursor: pointer; font-weight: 700; }
+.faq details p { margin-top: 8px; color: var(--navy-soft); }
+
+/* Formulář profilu */
+.chk-wrap { display: grid; gap: 8px; }
+.chk-root { border: 2px solid var(--steel); border-radius: var(--radius-sm); padding: 8px 12px; background: var(--white); }
+.chk-root summary { cursor: pointer; font-weight: 800; display: flex; align-items: center; gap: 8px; list-style-position: inside; }
+.chk-groups { display: grid; gap: 10px; margin-top: 10px; }
+.chk { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; }
+.chk input { width: 18px; height: 18px; accent-color: var(--red); flex: none; }
+.chk-leaves { display: flex; flex-wrap: wrap; gap: 4px 18px; padding-left: 26px; margin-top: 4px; }
+.coords { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin-top: 10px; }
+.coords label { display: grid; gap: 4px; font-size: 13.5px; font-weight: 600; }
+.coords input { width: 150px; padding: 8px 10px; font-size: 15px; }
+.fav-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.fav-item { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 16px; }
+.fav-item .avatar { width: 48px; height: 48px; }
+.fav-main { flex: 1; min-width: 160px; }
+
+/* Editor dostupnosti */
+.av-editor { display: grid; gap: 6px; }
+.av-title { font-size: 16px; font-weight: 800; margin: 10px 0 0; }
+.av-week { display: grid; gap: 8px; }
+.av-day { display: grid; grid-template-columns: 96px 1fr auto; gap: 8px 12px; align-items: start; padding: 8px 12px; background: var(--mist); border-radius: var(--radius-sm); }
+.av-day-name { font-weight: 700; padding-top: 8px; }
+.av-wins { display: grid; gap: 6px; }
+.av-off { padding-top: 8px; }
+.av-win { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.av-win input[type="time"], .av-ex input[type="date"] { width: auto; padding: 7px 10px; font-size: 15px; }
+.av-add { margin-top: 6px; white-space: nowrap; }
+.av-exs { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 8px; }
+.av-ex { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--mist); border-radius: var(--radius-sm); padding: 8px 12px; }
+.av-ex input[type="text"] { flex: 1 1 160px; padding: 7px 10px; font-size: 15px; }
+.av-ex select { width: auto; padding: 7px 10px; font-size: 15px; }
+.icon-btn-sm { width: 32px; height: 32px; font-size: 14px; border: 1px solid var(--steel); flex: none; }
+.av-preview { margin-top: 10px; padding: 10px 14px; background: var(--sky); border-radius: var(--radius-sm); font-size: 15px; }
+
+/* ---------- Responzivita: hlavička a nové komponenty ---------- */
+@media (max-width: 899px) {
+  .site-header { padding: 8px 14px; gap: 4px 10px; }
+  .site-header .logo { font-size: 18px; gap: 8px; }
+  .site-header .logo-mark { width: 30px; height: 30px; }
+  .role-switch select { max-width: 132px; padding: 6px 26px 6px 10px; font-size: 13px; }
+  .header-tools .btn-sm { padding: 7px 12px; font-size: 13px; }
+  .demo-banner { padding: 6px 12px; font-size: 13px; gap: 4px 8px; }
+  .mode-note { font-size: 11.5px; }
+  .main-nav { order: 3; flex: 1 0 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .main-nav a { white-space: nowrap; padding: 6px 12px; font-size: 14px; }
+  .header-tools { gap: 6px; }
+  .user-chip { max-width: 110px; }
+  .page { padding: 24px 14px 40px; }
+  .av-day { grid-template-columns: 1fr; }
+  .av-day-name { padding-top: 0; }
+  .list-tools { gap: 8px; }
+}
+@media (max-width: 520px) {
+  .role-choices { grid-template-columns: 1fr; }
+  .dialog { padding: 22px 18px 18px; border-radius: 18px; }
+  .two-col { grid-template-columns: 1fr; }
+  .fav-btn { order: 2; }
+  .card-top { flex-wrap: wrap; }
+  .user-chip { display: none; }
+  .mode-note { display: block; width: 100%; text-align: center; }
+}
+
+/* programově zaostřené prvky (pro čtečky) nemají mít viditelný rámeček */
+.summary:focus, .summary:focus-visible, main:focus, main:focus-visible { outline: none; box-shadow: none; }

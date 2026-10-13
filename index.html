@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Řemeslník na dosah</title>
-  <meta name="description" content="Popište problém v domácnosti a my vám ukážeme nejbližší vhodné řemeslníky na mapě. Ukázkový školní prototyp, data jsou smyšlená.">
+  <title>FixIt – řemeslník na dosah</title>
+  <meta name="description" content="FixIt: popište problém v domácnosti a ukážeme vám nejbližší vhodné řemeslníky na mapě. Ukázkový školní prototyp, data jsou smyšlená.">
   <meta name="theme-color" content="#031927">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23BA1200'/%3E%3Cpath d='M17.5 8.5a5 5 0 0 0-6.7 6.3L6 19.6 8.4 22l4.8-4.8a5 5 0 0 0 6.3-6.7l-3.2 3.2-2.2-.6-.6-2.2z' fill='none' stroke='white' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E">
 
@@ -15,59 +15,81 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="role-unknown">
   <a class="skip-link" href="#main">Přeskočit na obsah</a>
 
   <!-- Upozornění na ukázkový charakter webu (nahoře) -->
   <div class="demo-banner" role="note">
     <span class="demo-pill">DEMO</span>
     <strong>Ukázkový prototyp, data jsou smyšlená.</strong>
+    <span id="mode-note" class="mode-note"></span>
   </div>
 
   <header class="site-header">
-    <a class="logo" href="./" aria-label="Řemeslník na dosah – úvodní stránka">
+    <a class="logo" href="#/" aria-label="FixIt – úvodní stránka">
       <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
         <rect width="32" height="32" rx="9" fill="#BA1200"/>
         <path d="M17.5 8.5a5 5 0 0 0-6.7 6.3L6 19.6 8.4 22l4.8-4.8a5 5 0 0 0 6.3-6.7l-3.2 3.2-2.2-.6-.6-2.2z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
         <circle cx="23.5" cy="23.5" r="3" fill="#9DD1F1"/>
       </svg>
-      <span>Řemeslník <b>na dosah</b></span>
+      <span>Fix<b>It</b></span>
     </a>
+    <nav class="main-nav" id="main-nav" aria-label="Hlavní navigace"></nav>
+    <div class="header-tools">
+      <label class="role-switch">
+        <span class="sr-only">Moje role</span>
+        <select id="role-select" aria-label="Moje role">
+          <option value="client">Jsem klient</option>
+          <option value="craftsman">Jsem řemeslník</option>
+          <option value="guest">Jen se dívám</option>
+        </select>
+      </label>
+      <div id="auth-area" class="auth-area"></div>
+    </div>
   </header>
 
   <main id="main" tabindex="-1">
 
-    <!-- ==================== OBRAZOVKA 1: FORMULÁŘ ==================== -->
-    <section id="screen-form" class="screen-form" aria-labelledby="form-title">
+    <!-- ==================== #/ – ÚVOD A VYHLEDÁVÁNÍ ==================== -->
+    <section id="view-home" class="screen-form" aria-labelledby="form-title" data-view="home">
       <div class="blob blob-a" aria-hidden="true"></div>
       <div class="blob blob-b" aria-hidden="true"></div>
 
       <div class="hero">
         <p class="eyebrow">Rakovnicko · Tuchlovice · Kladensko</p>
         <h1 id="form-title">Něco doma nefunguje?<br><span>Řemeslník je blíž, než myslíte.</span></h1>
-        <p class="lead">Popište problém a ukážeme vám nejbližší vhodné řemeslníky na mapě i v seznamu.</p>
+        <p class="lead">Popište problém a ukážeme vám nejbližší vhodné řemeslníky na mapě i v seznamu. Pro klienty zdarma.</p>
       </div>
 
       <form id="search-form" class="form-card" novalidate autocomplete="off">
 
-        <!-- 1) Kategorie -->
-        <fieldset class="field-group">
+        <!-- 1) Kategorie: proklik po úrovních + hledání -->
+        <fieldset class="field-group" id="category-picker">
           <legend><span class="step">1</span> Vyberte typ problému <small>(nepovinné – když nevyberete, určíme ho z popisu)</small></legend>
-          <div class="tiles" id="category-tiles"></div>
-          <button type="button" class="link-btn" id="clear-category" hidden>Zrušit výběr kategorie</button>
+          <div class="cat-search">
+            <label for="cat-search" class="sr-only">Hledat v oborech</label>
+            <input id="cat-search" type="search" placeholder="Hledat obor, např. kohoutek, zásuvka, kácení…" autocomplete="off">
+          </div>
+          <nav id="cat-crumbs" class="crumbs" aria-label="Cesta v oborech"></nav>
+          <div id="cat-body" class="cat-body"></div>
+          <p id="cat-selected" class="cat-selected" aria-live="polite" hidden></p>
         </fieldset>
 
-        <!-- 2) Adresa -->
+        <!-- 2) Adresa (s našeptáváním, pokud je klíč Mapy.com) -->
         <div class="field-group">
           <label for="address" class="field-label"><span class="step">2</span> Adresa <small>(obec a ulice)</small></label>
-          <input id="address" name="address" type="text" inputmode="text" autocomplete="street-address"
-                 placeholder="např. Rakovník, Husovo náměstí 20" aria-describedby="address-help address-error" required>
-          <p id="address-help" class="help">Adresu použijeme jen k nalezení řemeslníků ve vašem okolí. Hledáme v Česku.</p>
+          <div class="combo">
+            <input id="address" name="address" type="text" inputmode="text" autocomplete="off"
+                   role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="address-list"
+                   placeholder="např. Rakovník, Husovo náměstí 20" aria-describedby="address-help address-error" required>
+            <ul id="address-list" class="suggest-list" role="listbox" aria-label="Návrhy adres" hidden></ul>
+          </div>
+          <p id="address-help" class="help">Adresu použijeme jen k nalezení řemeslníků ve vašem okolí. Hledáme v Česku. <span id="address-credit"></span></p>
           <p id="address-error" class="error" role="alert" hidden></p>
 
           <!-- Nouzový výběr obce, pokud se adresu nepodaří najít -->
           <div id="town-fallback" class="notice" role="alert" hidden>
-            <p id="town-fallback-msg"><strong>Adresu se nepodařilo najít.</strong> Vyberte nejbližší obec a hledání s ní dokončíme.</p>
+            <p id="town-fallback-msg"></p>
             <div class="town-row">
               <label for="town-select" class="sr-only">Obec</label>
               <select id="town-select"></select>
@@ -109,8 +131,8 @@
       </ol>
     </section>
 
-    <!-- ==================== OBRAZOVKA 2: VÝSLEDKY ==================== -->
-    <section id="screen-results" class="screen-results" aria-label="Výsledky hledání" hidden>
+    <!-- ==================== #/hledat – VÝSLEDKY ==================== -->
+    <section id="view-results" class="screen-results" aria-label="Výsledky hledání" data-view="results" hidden>
       <div class="mobile-tabs" role="tablist" aria-label="Zobrazení výsledků">
         <button type="button" class="back-btn" data-action="back" aria-label="Změnit hledání">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -123,6 +145,7 @@
         <div class="map-pane" id="map-pane" role="tabpanel" aria-labelledby="tab-map">
           <div id="map" aria-label="Mapa s řemeslníky v okolí"></div>
           <p id="map-fallback" class="map-fallback" hidden>Mapu se nepodařilo načíst (zkontrolujte připojení k internetu). Seznam řemeslníků funguje dál.</p>
+          <p id="map-notice" class="map-notice" role="alert" hidden></p>
         </div>
 
         <aside class="list-pane" id="list-pane" role="tabpanel" aria-labelledby="tab-list">
@@ -131,6 +154,9 @@
             <div id="gas-alert-results" class="gas-alert gas-alert-compact" role="alert" hidden></div>
             <div class="list-tools">
               <button type="button" class="btn btn-secondary btn-sm" data-action="back">← Změnit hledání</button>
+              <label class="check-pill" for="filter-today">
+                <input type="checkbox" id="filter-today"> <span>Volní dnes <span id="today-count" class="muted"></span></span>
+              </label>
               <div class="sort">
                 <label for="sort-select">Řadit:</label>
                 <select id="sort-select">
@@ -141,17 +167,92 @@
               </div>
             </div>
           </div>
-          <div id="cards" class="cards"></div>
+          <div class="list-scroll" id="list-scroll">
+            <div id="estimate" class="estimate-wrap"></div>
+            <div id="cards" class="cards"></div>
+          </div>
         </aside>
       </div>
     </section>
+
+    <!-- ==================== OSTATNÍ STRÁNKY (obsah vykresluje pages.js) ==================== -->
+    <section id="view-pro" class="page" data-view="pro" aria-labelledby="pro-title" hidden></section>
+    <section id="view-fees" class="page" data-view="fees" aria-labelledby="fees-title" hidden></section>
+    <section id="view-profile" class="page" data-view="profile" aria-labelledby="profile-title" hidden></section>
+    <section id="view-register" class="page" data-view="register" aria-labelledby="register-title" hidden></section>
   </main>
 
   <!-- Patička (viditelné upozornění na ukázkový charakter webu) -->
   <footer class="site-footer">
-    <strong>Ukázkový prototyp, data jsou smyšlená.</strong>
-    <span>Školní projekt · Základy podnikání · Mapové podklady © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">přispěvatelé OpenStreetMap</a></span>
+    <strong>FixIt – ukázkový prototyp, data jsou smyšlená.</strong>
+    <span>Školní projekt · Základy podnikání · <span id="footer-map-credit"></span></span>
   </footer>
+
+  <!-- ==================== VÝBĚR ROLE (první návštěva) ==================== -->
+  <div id="role-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="dialog dialog-role" role="dialog" aria-modal="true" aria-labelledby="role-title" aria-describedby="role-desc">
+      <h2 id="role-title">Vítejte ve FixIt</h2>
+      <p id="role-desc" class="muted-lg">Co vás sem přivádí? Volbu můžete kdykoli změnit v záhlaví.</p>
+      <div class="role-choices">
+        <button type="button" class="role-card" data-role="client">
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>
+          <strong>Jsem klient</strong>
+          <span>Hledám řemeslníka ve svém okolí. Zdarma.</span>
+        </button>
+        <button type="button" class="role-card" data-role="craftsman">
+          <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>
+          <strong>Jsem řemeslník</strong>
+          <span>Chci získat nové zakázky ve svém okolí.</span>
+        </button>
+      </div>
+      <button type="button" class="link-btn role-skip" data-role="guest">Jen se podívám</button>
+    </div>
+  </div>
+
+  <!-- ==================== PŘIHLÁŠENÍ / REGISTRACE ==================== -->
+  <div id="auth-modal" class="modal" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="dialog dialog-auth" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <button type="button" class="icon-btn dialog-x" data-close aria-label="Zavřít okno">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </button>
+      <h2 id="auth-title">Přihlášení</h2>
+      <p id="auth-reason" class="notice-inline" hidden></p>
+      <p id="auth-demo-note" class="notice-inline notice-demo" hidden><strong>Demo režim:</strong> přihlášení je jen simulované a uložené ve vašem prohlížeči. Heslo se nevyžaduje, neověřuje ani neukládá.</p>
+      <div class="auth-tabs" role="tablist" aria-label="Přihlášení nebo registrace" id="auth-tabs">
+        <button type="button" role="tab" id="auth-tab-login" data-mode="login" aria-selected="true">Přihlásit se</button>
+        <button type="button" role="tab" id="auth-tab-register" data-mode="register" aria-selected="false">Vytvořit účet</button>
+      </div>
+      <form id="auth-form" novalidate>
+        <div class="form-row" data-for="register">
+          <label for="auth-name">Jméno (zobrazí se ostatním)</label>
+          <input id="auth-name" type="text" autocomplete="name" maxlength="60">
+        </div>
+        <fieldset class="form-row role-radios" data-for="register">
+          <legend>Jsem</legend>
+          <label><input type="radio" name="auth-role" value="client" checked> klient</label>
+          <label><input type="radio" name="auth-role" value="craftsman"> řemeslník</label>
+        </fieldset>
+        <div class="form-row" data-for="login register forgot">
+          <label for="auth-email">E-mail</label>
+          <input id="auth-email" type="email" autocomplete="email" inputmode="email">
+        </div>
+        <div class="form-row" data-for="login register recovery" data-password>
+          <label for="auth-password" id="auth-password-label">Heslo</label>
+          <input id="auth-password" type="password" autocomplete="current-password">
+          <p class="help" data-for="register recovery">Alespoň 8 znaků.</p>
+        </div>
+        <p id="auth-error" class="error" role="alert" hidden></p>
+        <p id="auth-info" class="notice-inline notice-ok" role="status" hidden></p>
+        <button type="submit" class="btn btn-primary btn-block" id="auth-submit">Přihlásit se</button>
+        <p class="auth-links">
+          <button type="button" class="link-btn" data-mode="forgot" data-for="login">Zapomenuté heslo?</button>
+          <button type="button" class="link-btn" data-mode="login" data-for="forgot">← Zpět na přihlášení</button>
+        </p>
+      </form>
+    </div>
+  </div>
 
   <!-- ==================== OKNO CHATU ==================== -->
   <div id="chat" class="modal" hidden>
@@ -182,7 +283,16 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="config.js"></script>
+  <script src="util.js"></script>
   <script src="data.js"></script>
+  <script src="maps.js"></script>
+  <script src="categories.js"></script>
+  <script src="availability.js"></script>
+  <script src="address-input.js"></script>
+  <script src="data-source.js"></script>
+  <script src="auth.js"></script>
+  <script src="pages.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
